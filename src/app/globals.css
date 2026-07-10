@@ -1,0 +1,272 @@
+@import "tailwindcss";
+
+/* ===================================================================
+   Rishta Rate — Design System
+   Ported 1:1 from the Stitch mockup (satirical_matrimonial_critique)
+   =================================================================== */
+
+@theme {
+  /* Color tokens */
+  --color-primary: #a43c12;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #ff7f50;
+  --color-on-primary-container: #6c2000;
+  --color-primary-fixed: #ffdbcf;
+  --color-primary-fixed-dim: #ffb59c;
+  --color-on-primary-fixed: #380c00;
+  --color-on-primary-fixed-variant: #822800;
+  --color-inverse-primary: #ffb59c;
+
+  --color-secondary: #815500;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #fdb747;
+  --color-on-secondary-container: #6f4900;
+  --color-secondary-fixed: #ffddb2;
+  --color-secondary-fixed-dim: #ffb94c;
+  --color-on-secondary-fixed: #291800;
+  --color-on-secondary-fixed-variant: #624000;
+
+  --color-tertiary: #006970;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #00b5c0;
+  --color-on-tertiary-container: #004145;
+  --color-tertiary-fixed: #7af4ff;
+  --color-tertiary-fixed-dim: #4dd9e4;
+  --color-on-tertiary-fixed: #002022;
+  --color-on-tertiary-fixed-variant: #004f54;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  --color-surface: #fcf9f8;
+  --color-on-surface: #1b1c1c;
+  --color-surface-dim: #dcd9d9;
+  --color-surface-bright: #fcf9f8;
+  --color-surface-variant: #e4e2e1;
+  --color-on-surface-variant: #57423b;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f6f3f2;
+  --color-surface-container: #f0eded;
+  --color-surface-container-high: #eae7e7;
+  --color-surface-container-highest: #e4e2e1;
+
+  --color-outline: #8b7169;
+  --color-outline-variant: #dec0b6;
+
+  --color-inverse-surface: #303030;
+  --color-inverse-on-surface: #f3f0f0;
+
+  --color-background: #fcf9f8;
+  --color-on-background: #1b1c1c;
+
+  /* Radii */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* Fonts (loaded via <link> tags in layout.tsx to avoid build-time font fetching) */
+  --font-quicksand: "Quicksand", ui-sans-serif, system-ui, sans-serif;
+  --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background: var(--color-background);
+  color: var(--color-on-background);
+}
+
+body {
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+/* ---------- Typography scale (from DESIGN.md) ---------- */
+.font-headline-lg {
+  font-family: var(--font-quicksand);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 40px;
+  letter-spacing: -0.02em;
+}
+.font-headline-lg-mobile {
+  font-family: var(--font-quicksand);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 36px;
+}
+.font-headline-md {
+  font-family: var(--font-quicksand);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+}
+.font-headline-sm {
+  font-family: var(--font-quicksand);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+}
+.font-body-lg {
+  font-family: var(--font-inter);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 28px;
+}
+.font-body-md {
+  font-family: var(--font-inter);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+}
+.font-body-sm {
+  font-family: var(--font-inter);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+.font-label-bold {
+  font-family: var(--font-inter);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+}
+
+/* ---------- Shared bits ---------- */
+.card-shadow {
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05);
+}
+.coral-gradient {
+  background: linear-gradient(135deg, #ff7f50 0%, #fdb747 100%);
+}
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+}
+.msym-fill {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+@keyframes floating {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
+}
+.hero-float {
+  animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-rotate-slow {
+  animation: rotate-slow 12s linear infinite;
+}
+
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-float-y {
+  animation: float-y 3s ease-in-out infinite;
+}
+
+.status-text {
+  transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+}
+.status-hidden {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.bento-card {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.bento-card:hover {
+  transform: scale(1.02);
+}
+
+/* Range slider styling (WebKit + Firefox) */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--color-surface-container-high);
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  margin-top: -1px;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--color-surface-container-high);
+}
+
+/* Toggle switch */
+.toggle-checkbox:checked + .toggle-label {
+  background-color: var(--color-primary);
+}
+.toggle-checkbox:checked + .toggle-label .toggle-dot {
+  transform: translateX(20px);
+}
+
+/* Reveal card flip */
+.reveal-card {
+  transform: perspective(1000px) rotateY(90deg);
+  opacity: 0;
+  transition: transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease-out;
+}
+.reveal-card.is-revealed {
+  transform: perspective(1000px) rotateY(0deg);
+  opacity: 1;
+}
+
+.trophy-glow {
+  box-shadow: 0 0 50px rgba(253, 183, 71, 0.3);
+}
+
+.confetti-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+}
+
+::selection {
+  background: rgba(255, 127, 80, 0.3);
+}
