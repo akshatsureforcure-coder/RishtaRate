@@ -2,7 +2,7 @@
 
 import Icon from "../Icon";
 import type { MoustacheGame, RishtaFormData, VibeCheck } from "@/lib/types";
-import { cmToFeetInches } from "@/lib/roastEngine";
+import { cmToFeetInches, formatLakhsInput } from "@/lib/roastEngine";
 
 interface InputsScreenProps {
   data: RishtaFormData;
@@ -12,6 +12,7 @@ interface InputsScreenProps {
 
 const MUMMY_LABELS = ["Black Sheep", "Strictly OK", "Good Lad", "Raja Beta", "Beta is King"];
 const BUILT_LABELS = ["Skinny", "Slim", "Average", "Fit", "Buff"];
+const CHAI_LABELS = ["Burnt Water", "Needs Practice", "Decent", "Solid", "MIL Approved"];
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -35,6 +36,7 @@ export default function InputsScreen({ data, onChange, onSubmit }: InputsScreenP
 
   const mummyIndex = Math.min(Math.floor(data.mummyApproval / 25), 4);
   const builtIndex = Math.min(Math.floor(data.built / 25), 4);
+  const chaiIndex = Math.min(Math.floor(data.chaiSkills / 25), 4);
 
   return (
     <>
@@ -96,13 +98,14 @@ export default function InputsScreen({ data, onChange, onSubmit }: InputsScreenP
 
           <div className="space-y-2">
             <div className="flex justify-between items-end">
-              <label className="font-label-bold text-on-surface-variant px-1">CTC (IN LAKHS)</label>
-              <span className="font-headline-md text-primary">₹{data.ctcLakhs}L</span>
+              <label className="font-label-bold text-on-surface-variant px-1">CTC</label>
+              <span className="font-headline-md text-primary">{formatLakhsInput(data.ctcLakhs)}</span>
             </div>
             <input
               type="range"
               min={3}
-              max={150}
+              max={1000}
+              step={1}
               value={data.ctcLakhs}
               onChange={(e) => set("ctcLakhs", Number(e.target.value))}
               className="mt-2"
@@ -208,27 +211,53 @@ export default function InputsScreen({ data, onChange, onSubmit }: InputsScreenP
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
-              <div className="flex items-center gap-3">
-                <Icon name="home" className="text-secondary" />
-                <div>
-                  <p className="font-label-bold">Own House?</p>
-                  <p className="text-xs text-on-surface-variant">South Delhi adds +50 pts</p>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between items-end">
+                <div className="flex items-center gap-2">
+                  <Icon name="home" className="text-secondary" />
+                  <label className="font-label-bold text-on-surface-variant">PROPERTIES OWNED</label>
                 </div>
+                <span className="font-headline-md text-primary">
+                  {data.numProperties}
+                  {data.numProperties >= 5 ? "+" : ""}
+                </span>
               </div>
-              <Toggle checked={data.ownHouse} onChange={(v) => set("ownHouse", v)} />
+              <input
+                type="range"
+                min={0}
+                max={5}
+                value={data.numProperties}
+                onChange={(e) => set("numProperties", Number(e.target.value))}
+                className="mt-2"
+              />
+              <p className="text-center font-body-sm italic text-on-surface-variant opacity-70">
+                South Delhi kothis count double, obviously.
+              </p>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
-              <div className="flex items-center gap-3">
-                <Icon name="directions_car" className="text-secondary" />
-                <div>
-                  <p className="font-label-bold">Own a Car?</p>
-                  <p className="text-xs text-on-surface-variant">Even a Nano adds +10 personality pts</p>
+            <div className="space-y-2">
+              <div className="flex justify-between items-end">
+                <div className="flex items-center gap-2">
+                  <Icon name="directions_car" className="text-secondary" />
+                  <label className="font-label-bold text-on-surface-variant">CARS OWNED</label>
                 </div>
+                <span className="font-headline-md text-primary">
+                  {data.numCars}
+                  {data.numCars >= 5 ? "+" : ""}
+                </span>
               </div>
-              <Toggle checked={data.ownCar} onChange={(v) => set("ownCar", v)} />
+              <input
+                type="range"
+                min={0}
+                max={5}
+                value={data.numCars}
+                onChange={(e) => set("numCars", Number(e.target.value))}
+                className="mt-2"
+              />
+              <p className="text-center font-body-sm italic text-on-surface-variant opacity-70">
+                Even a Nano counts. We don&apos;t judge. (We do.)
+              </p>
             </div>
           </div>
         </section>
@@ -261,15 +290,15 @@ export default function InputsScreen({ data, onChange, onSubmit }: InputsScreenP
 
           <div className="space-y-2">
             <div className="flex justify-between items-end">
-              <label className="font-label-bold text-on-surface-variant px-1">
-                WEDDING BUDGET (IN LAKHS)
-              </label>
-              <span className="font-headline-md text-primary">₹{data.weddingBudgetLakhs}L</span>
+              <label className="font-label-bold text-on-surface-variant px-1">WEDDING BUDGET</label>
+              <span className="font-headline-md text-primary">
+                {formatLakhsInput(data.weddingBudgetLakhs)}
+              </span>
             </div>
             <input
               type="range"
               min={5}
-              max={200}
+              max={1000}
               step={5}
               value={data.weddingBudgetLakhs}
               onChange={(e) => set("weddingBudgetLakhs", Number(e.target.value))}
@@ -319,6 +348,36 @@ export default function InputsScreen({ data, onChange, onSubmit }: InputsScreenP
               </div>
             </div>
             <Toggle checked={data.singsBollywood} onChange={(v) => set("singsBollywood", v)} />
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-secondary-container/5 border border-secondary-container/20 rounded-xl">
+            <div className="flex items-center gap-3">
+              <Icon name="nightlife" className="text-secondary" />
+              <div>
+                <p className="font-label-bold">Dances at Weddings?</p>
+                <p className="text-xs text-on-surface-variant">Bonus points for questionable hip-thrusts</p>
+              </div>
+            </div>
+            <Toggle checked={data.dancesBollywood} onChange={(v) => set("dancesBollywood", v)} />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-end">
+              <label className="font-label-bold text-on-surface-variant px-1">CHAI MAKING SKILLS</label>
+              <span className="font-label-bold text-primary">{CHAI_LABELS[chaiIndex]}</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={data.chaiSkills}
+              onChange={(e) => set("chaiSkills", Number(e.target.value))}
+              className="mt-2"
+            />
+            <div className="flex justify-between text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">
+              <span>Burnt Water</span>
+              <span>MIL Approved</span>
+            </div>
           </div>
         </section>
 

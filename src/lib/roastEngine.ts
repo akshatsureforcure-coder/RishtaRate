@@ -22,10 +22,15 @@ export function formatRupees(amount: number): string {
   return `${negative ? "-" : ""}₹${formatted}`;
 }
 
-/** Format a signed delta in compact lakh notation, e.g. 500000 -> +₹5L, -50000 -> -₹50k */
+/** Format a signed delta in compact lakh/crore notation, e.g. 500000 -> +₹5L, -50000 -> -₹50k */
 function formatDelta(amount: number): string {
   const sign = amount >= 0 ? "+" : "-";
   const abs = Math.abs(amount);
+  if (abs >= 1_00_00_000) {
+    const crores = abs / 1_00_00_000;
+    const str = Number.isInteger(crores) ? crores.toFixed(0) : crores.toFixed(2);
+    return `${sign}₹${str}Cr`;
+  }
   if (abs >= 100000) {
     const lakhs = abs / 100000;
     const str = Number.isInteger(lakhs) ? lakhs.toFixed(0) : lakhs.toFixed(1);
@@ -34,6 +39,17 @@ function formatDelta(amount: number): string {
   const thousands = abs / 1000;
   const str = Number.isInteger(thousands) ? thousands.toFixed(0) : thousands.toFixed(1);
   return `${sign}₹${str}k`;
+}
+
+/** Format a raw lakh value (as used by the CTC / wedding budget sliders) as
+ * ₹XL below 100L, or ₹X.XCr from 100L (1 crore) upward. */
+export function formatLakhsInput(lakhs: number): string {
+  if (lakhs >= 100) {
+    const crores = lakhs / 100;
+    const str = Number.isInteger(crores) ? crores.toFixed(0) : crores.toFixed(2);
+    return `₹${str}Cr`;
+  }
+  return `₹${lakhs}L`;
 }
 
 /** Convert cm to a "5'9"" style display string. */
@@ -221,8 +237,11 @@ export function computeRishtaResult(data: RishtaFormData): RishtaResult {
   const chips: BreakdownChip[] = [];
   let total = 500_000; // base valuation
 
-  // CTC contribution
-  total += data.ctcLakhs * 150_000;
+  // CTC contribution (scaled so even ₹10Cr CTC stays in a sane range)
+  total += data.ctcLakhs * 40_000;
+
+  // Wedding budget contribution — a bigger budget signals more confidence/status
+  total += data.weddingBudgetLakhs * 20_000;
 
   // Job modifier (free text, keyword matched)
   const job = getJobModifier(data.job);
@@ -264,21 +283,39 @@ export function computeRishtaResult(data: RishtaFormData): RishtaResult {
     chips.push({ label: "NRI dollar premium", amount: amt });
   }
 
-  // Assets
-  if (data.ownHouse) {
-    const amt = 500_000;
-    total += amt;
-    chips.push({ label: "South Delhi kothi energy", amount: amt });
-  } else {
+  // Properties owned
+  const numProps = Math.min(data.numProperties, 5);
+  if (numProps === 0) {
     const amt = -200_000;
     total += amt;
     chips.push({ label: "renting in this economy", amount: amt });
+  } else {
+    const amt = 400_000 + (numProps - 1) * 150_000;
+    total += amt;
+    chips.push({
+      label:
+        numProps === 1
+          ? "one solid property to their name"
+          : numProps >= 4
+          ? "real estate mogul energy"
+          : `${numProps} properties, mini portfolio flex`,
+      amount: amt,
+    });
   }
 
-  if (data.ownCar) {
-    const amt = 100_000;
+  // Cars owned
+  const numCars = Math.min(data.numCars, 5);
+  if (numCars === 0) {
+    const amt = -50_000;
     total += amt;
-    chips.push({ label: "even-a-Nano personality pts", amount: amt });
+    chips.push({ label: "no car, takes the metro like a legend", amount: amt });
+  } else {
+    const amt = 100_000 + (numCars - 1) * 50_000;
+    total += amt;
+    chips.push({
+      label: numCars === 1 ? "even-a-Nano personality pts" : `${numCars}-car garage flex`,
+      amount: amt,
+    });
   }
 
   // Mummy approval (0-300000 range)
@@ -308,13 +345,30 @@ export function computeRishtaResult(data: RishtaFormData): RishtaResult {
     amount: singAmt,
   });
 
-  // Flat comedic "picky chai taste" tax, always applied
-  const chaiTax = -50_000;
-  total += chaiTax;
-  chips.push({ label: "picky chai taste", amount: chaiTax });
+  // Bollywood dancing
+  const danceAmt = data.dancesBollywood ? 150_000 : -50_000;
+  total += danceAmt;
+  chips.push({
+    label: data.dancesBollywood ? "steals the dance floor at sangeet" : "two-left-feet at the sangeet",
+    amount: danceAmt,
+  });
 
-  // Never let it go below a floor, for comedic dignity
+  // Chai making skills (0-100 -> -₹1.5L to +₹1.5L)
+  const chaiAmt = Math.round(((data.chaiSkills - 50) / 50) * 150_000);
+  total += chaiAmt;
+  chips.push({
+    label:
+      data.chaiSkills >= 80
+        ? "MIL-approved chai skills"
+        : data.chaiSkills >= 40
+        ? "decent chai game"
+        : "chai needs serious practice",
+    amount: chaiAmt,
+  });
+
+  // Never let it go below a floor, for comedic dignity — or above a sane ceiling
   total = Math.max(total, 150_000);
+  total = Math.min(total, 50_000_000);
   // Round to nearest 10,000
   total = Math.round(total / 10_000) * 10_000;
 
@@ -337,8 +391,9 @@ export function computeRishtaResult(data: RishtaFormData): RishtaResult {
   let compatibility =
     50 +
     data.mummyApproval * 0.3 +
-    (data.ownHouse ? 10 : 0) +
-    (data.singsBollywood ? 5 : 0) +
+    (data.numProperties > 0 ? 10 : 0) +
+    (data.singsBollywood ? 3 : 0) +
+    (data.dancesBollywood ? 3 : 0) +
     (data.vibeCheck === "NRI VIBES" ? 5 : 0);
   compatibility = Math.min(99, Math.max(40, Math.round(compatibility)));
 
@@ -366,52 +421,3 @@ export function computeRishtaResult(data: RishtaFormData): RishtaResult {
 }
 
 export { formatDelta };
-
-/* ------------------------------------------------------------------ */
-/* Live gold rate adjustment — small multiplier on the final amount    */
-/* ------------------------------------------------------------------ */
-
-// Representative baseline (₹/10g, 24K) that today's live rate is compared
-// against. The live rate fetched from /api/gold-rate moves the final
-// number up or down a small amount around this anchor.
-const GOLD_RATE_BASELINE = 143000;
-const MAX_GOLD_ADJUSTMENT_PCT = 0.07; // cap swing at ±7%
-
-export interface GoldRateAdjustment {
-  ratePerTenGrams: number;
-  source: "live" | "fallback";
-  amount: number;
-  pct: number;
-}
-
-/**
- * Nudges a computed result's total by a small live-market amount based on
- * today's gold rate vs. a fixed baseline, and appends a dedicated chip so
- * it's clearly shown as a separate line from the roast-based chips.
- */
-export function applyGoldRateAdjustment(
-  result: RishtaResult,
-  ratePerTenGrams: number,
-  source: "live" | "fallback"
-): RishtaResult {
-  const rawPct = ratePerTenGrams / GOLD_RATE_BASELINE - 1;
-  const pct = Math.max(-MAX_GOLD_ADJUSTMENT_PCT, Math.min(MAX_GOLD_ADJUSTMENT_PCT, rawPct));
-
-  let adjustedTotal = result.totalAmount * (1 + pct);
-  adjustedTotal = Math.max(adjustedTotal, 150_000);
-  adjustedTotal = Math.round(adjustedTotal / 10_000) * 10_000;
-
-  const amount = adjustedTotal - result.totalAmount;
-
-  const goldChip: BreakdownChip = {
-    label: `🪙 today's gold rate (₹${ratePerTenGrams.toLocaleString("en-IN")}/10g)`,
-    amount,
-  };
-
-  return {
-    ...result,
-    totalAmount: adjustedTotal,
-    chips: [...result.chips, goldChip],
-    goldRateAdjustment: { ratePerTenGrams, source, amount, pct },
-  };
-}

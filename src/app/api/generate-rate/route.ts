@@ -35,10 +35,16 @@ Style guide (match this tone, don't copy these lines verbatim):
 - Headline examples: "Solid catch, but Mummy still wants a Fortuner 🚗", "Certified 'Beta Settled' — every aunty in the colony is now interested."
 - Red flag examples: "Low: Just a tiny ego", "Medium: Overinvested in cricket opinions", "High: Crypto in every conversation"
 
+CALIBRATION — this is the most important rule, follow it precisely:
+- Compute an anchor first: anchor = 500000 + (CTC in lakhs × 40000) + (wedding budget in lakhs × 20000).
+- The final totalAmount must stay within roughly ±30% of that anchor. Every other input (degree, height,
+  built, properties, cars, mummy's approval, moustache, singing, dancing, chai skills, vibe check) should
+  only nudge the number up or down within that ±30% band via the chips — they are flavor and shouldn't
+  dominate two numbers that are explicitly provided (CTC and wedding budget).
+- Never go below ₹1,50,000. Keep totalAmount a multiple of ₹10,000.
+
 Rules:
-- totalAmount should usually land between ₹1,50,000 and ₹1,00,00,000, scaling up with CTC, degree pedigree,
-  wedding budget, and other flattering inputs, and down for red flags or blank/weak inputs. Never go below ₹1,50,000.
-- Give exactly 3-5 chips, each a short punchy reason with a signed rupee amount.
+- Give exactly 3-5 chips, each a short punchy reason with a signed rupee amount, reflecting the non-CTC/budget inputs.
 - Keep everything affectionate teasing, never genuinely insulting, never about real people, never hateful.
 - Output must be valid JSON matching the schema. No markdown, no commentary outside the JSON.`;
 
@@ -50,12 +56,20 @@ function buildUserPrompt(data: RishtaFormData): string {
 - Height: ${data.heightCm} cm
 - Built (0=skinny, 100=buff): ${data.built}
 - Vibe check: ${data.vibeCheck}
-- Owns a house: ${data.ownHouse ? "yes" : "no"}
-- Owns a car: ${data.ownCar ? "yes" : "no"}
+- Properties owned: ${data.numProperties}
+- Cars owned: ${data.numCars}
 - Mummy's approval (0-100): ${data.mummyApproval}
 - Moustache game: ${data.moustache}
 - Sings Bollywood songs: ${data.singsBollywood ? "yes" : "no"}
+- Dances at weddings: ${data.dancesBollywood ? "yes" : "no"}
+- Chai making skills (0-100): ${data.chaiSkills}
 - Wedding budget: ₹${data.weddingBudgetLakhs}L
+
+Anchor for this profile = 500000 + (${data.ctcLakhs} × 40000) + (${data.weddingBudgetLakhs} × 20000) = ₹${(
+    500000 +
+    data.ctcLakhs * 40000 +
+    data.weddingBudgetLakhs * 20000
+  ).toLocaleString("en-IN")}. Keep totalAmount within ±30% of this anchor.
 
 Generate the JSON verdict now.`;
 }
@@ -93,7 +107,7 @@ function validateAiResult(raw: unknown): RishtaResult | null {
   if (chips.length === 0) return null;
 
   return {
-    totalAmount: clampNumber(r.totalAmount, 150_000, 50_000_000, 500_000),
+    totalAmount: clampNumber(r.totalAmount, 150_000, 200_000_000, 500_000),
     headline: truncate(r.headline, 90, "The Aunties are still deliberating."),
     chips,
     compatibility: Math.round(clampNumber(r.compatibility, 40, 99, 60)),

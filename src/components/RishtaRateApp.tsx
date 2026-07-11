@@ -10,7 +10,7 @@ import ProcessingScreen from "./screens/ProcessingScreen";
 import VerdictScreen from "./screens/VerdictScreen";
 import AuntiesScreen from "./screens/AuntiesScreen";
 import ComingSoonScreen from "./screens/ComingSoonScreen";
-import { computeRishtaResult, applyGoldRateAdjustment } from "@/lib/roastEngine";
+import { computeRishtaResult } from "@/lib/roastEngine";
 import { getDeviceId } from "@/lib/deviceId";
 import { saveSubmission } from "@/lib/submissions";
 import { DEFAULT_FORM_DATA, RishtaFormData, RishtaResult } from "@/lib/types";
@@ -39,29 +39,24 @@ export default function RishtaRateApp() {
   const handleProcessingComplete = async () => {
     let computed: RishtaResult;
 
-    const [rateRes, goldRes] = await Promise.allSettled([
-      fetch("/api/generate-rate", {
+    try {
+      const res = await fetch("/api/generate-rate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
         signal: AbortSignal.timeout(10000),
-      }),
-      fetch("/api/gold-rate", { signal: AbortSignal.timeout(6000) }),
-    ]);
-
-    if (rateRes.status === "fulfilled" && rateRes.value.ok) {
-      const { result } = await rateRes.value.json();
-      computed = result;
-    } else {
+      });
+      if (res.ok) {
+        const { result } = await res.json();
+        computed = result;
+      } else {
+        throw new Error("generate-rate request failed");
+      }
+    } catch {
       // Belt-and-suspenders fallback if even the request itself failed
       // (network down, etc.) — the API route already has its own
       // internal fallback for when Gemini specifically fails.
       computed = { ...computeRishtaResult(formData), source: "rules" };
-    }
-
-    if (goldRes.status === "fulfilled" && goldRes.value.ok) {
-      const { rate, source } = await goldRes.value.json();
-      computed = applyGoldRateAdjustment(computed, rate, source);
     }
 
     setResult(computed);
@@ -73,6 +68,9 @@ export default function RishtaRateApp() {
     saveSubmission(id, formData.nickname, computed).then(() =>
       setRefreshSignal((s) => s + 1)
     );
+
+    // Clear the form so the next visit to Inputs starts fresh.
+    setFormData(DEFAULT_FORM_DATA);
   };
 
   if (screen === "processing") {
