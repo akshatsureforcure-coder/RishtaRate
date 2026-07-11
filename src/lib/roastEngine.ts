@@ -366,3 +366,52 @@ export function computeRishtaResult(data: RishtaFormData): RishtaResult {
 }
 
 export { formatDelta };
+
+/* ------------------------------------------------------------------ */
+/* Live gold rate adjustment — small multiplier on the final amount    */
+/* ------------------------------------------------------------------ */
+
+// Representative baseline (₹/10g, 24K) that today's live rate is compared
+// against. The live rate fetched from /api/gold-rate moves the final
+// number up or down a small amount around this anchor.
+const GOLD_RATE_BASELINE = 143000;
+const MAX_GOLD_ADJUSTMENT_PCT = 0.07; // cap swing at ±7%
+
+export interface GoldRateAdjustment {
+  ratePerTenGrams: number;
+  source: "live" | "fallback";
+  amount: number;
+  pct: number;
+}
+
+/**
+ * Nudges a computed result's total by a small live-market amount based on
+ * today's gold rate vs. a fixed baseline, and appends a dedicated chip so
+ * it's clearly shown as a separate line from the roast-based chips.
+ */
+export function applyGoldRateAdjustment(
+  result: RishtaResult,
+  ratePerTenGrams: number,
+  source: "live" | "fallback"
+): RishtaResult {
+  const rawPct = ratePerTenGrams / GOLD_RATE_BASELINE - 1;
+  const pct = Math.max(-MAX_GOLD_ADJUSTMENT_PCT, Math.min(MAX_GOLD_ADJUSTMENT_PCT, rawPct));
+
+  let adjustedTotal = result.totalAmount * (1 + pct);
+  adjustedTotal = Math.max(adjustedTotal, 150_000);
+  adjustedTotal = Math.round(adjustedTotal / 10_000) * 10_000;
+
+  const amount = adjustedTotal - result.totalAmount;
+
+  const goldChip: BreakdownChip = {
+    label: `🪙 today's gold rate (₹${ratePerTenGrams.toLocaleString("en-IN")}/10g)`,
+    amount,
+  };
+
+  return {
+    ...result,
+    totalAmount: adjustedTotal,
+    chips: [...result.chips, goldChip],
+    goldRateAdjustment: { ratePerTenGrams, source, amount, pct },
+  };
+}

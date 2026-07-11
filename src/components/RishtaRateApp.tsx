@@ -10,7 +10,7 @@ import ProcessingScreen from "./screens/ProcessingScreen";
 import VerdictScreen from "./screens/VerdictScreen";
 import AuntiesScreen from "./screens/AuntiesScreen";
 import ComingSoonScreen from "./screens/ComingSoonScreen";
-import { computeRishtaResult } from "@/lib/roastEngine";
+import { computeRishtaResult, applyGoldRateAdjustment } from "@/lib/roastEngine";
 import { getDeviceId } from "@/lib/deviceId";
 import { saveSubmission } from "@/lib/submissions";
 import { DEFAULT_FORM_DATA, RishtaFormData, RishtaResult } from "@/lib/types";
@@ -36,8 +36,21 @@ export default function RishtaRateApp() {
     setScreen(target);
   };
 
-  const handleProcessingComplete = () => {
-    const computed = computeRishtaResult(formData);
+  const handleProcessingComplete = async () => {
+    let computed = computeRishtaResult(formData);
+
+    // Nudge the final number by today's live gold rate, if we can get it
+    // quickly. Never let this block or break the verdict.
+    try {
+      const res = await fetch("/api/gold-rate", { signal: AbortSignal.timeout(6000) });
+      if (res.ok) {
+        const { rate, source } = await res.json();
+        computed = applyGoldRateAdjustment(computed, rate, source);
+      }
+    } catch {
+      // No live rate this time — show the roast-only result, no big deal.
+    }
+
     setResult(computed);
     setScreen("verdict");
 

@@ -29,6 +29,12 @@ export interface RishtaResult {
   compatibility: number; // 0-100
   redFlagLabel: string;
   redFlagDetail: string;
+  goldRateAdjustment?: {
+    ratePerTenGrams: number;
+    source: "live" | "fallback";
+    amount: number;
+    pct: number;
+  };
 }
 
 export interface Submission {
