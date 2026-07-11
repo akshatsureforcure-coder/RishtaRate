@@ -66,6 +66,23 @@ export default function InputsScreen({ data, onChange, onSubmit }: InputsScreenP
 
           <div className="space-y-2">
             <label className="font-label-bold text-on-surface-variant px-1 block">
+              WHAT SHOULD THE AUNTIES CALL YOU?
+            </label>
+            <input
+              type="text"
+              value={data.nickname}
+              onChange={(e) => set("nickname", e.target.value)}
+              placeholder="e.g. Delhi ka Dilbar, or just your name"
+              maxLength={30}
+              className="w-full bg-surface-container-low border-none rounded-xl py-4 px-4 text-base focus:ring-2 focus:ring-primary/20"
+            />
+            <p className="text-center font-body-sm italic text-on-surface-variant opacity-70">
+              This is what shows up on the public Leaderboard.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="font-label-bold text-on-surface-variant px-1 block">
               WHAT DO YOU DO? (OR PRETEND TO)
             </label>
             <input
@@ -287,13 +304,16 @@ export default function InputsScreen({ data, onChange, onSubmit }: InputsScreenP
         <div className="pt-6 pb-8 space-y-3">
           <button
             type="button"
+            disabled={!data.nickname.trim()}
             onClick={onSubmit}
-            className="w-full py-5 rounded-2xl coral-gradient text-white font-headline-sm shadow-lg shadow-primary/30 transition-all duration-300 active:scale-95 hover:brightness-105"
+            className="w-full py-5 rounded-2xl coral-gradient text-white font-headline-sm shadow-lg shadow-primary/30 transition-all duration-300 active:scale-95 hover:brightness-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
           >
             Reveal My Rate
           </button>
           <p className="text-center font-body-sm text-on-surface-variant px-[20px]">
-            By clicking, you admit your chai-making skills are 6/10 at best.
+            {data.nickname.trim()
+              ? "By clicking, you admit your chai-making skills are 6/10 at best."
+              : "Give the Aunties a name to call you, first."}
           </p>
         </div>
       </main>

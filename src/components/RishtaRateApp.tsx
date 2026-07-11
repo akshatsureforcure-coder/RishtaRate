@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 import BottomNav from "./BottomNav";
@@ -8,8 +8,11 @@ import WelcomeScreen from "./screens/WelcomeScreen";
 import InputsScreen from "./screens/InputsScreen";
 import ProcessingScreen from "./screens/ProcessingScreen";
 import VerdictScreen from "./screens/VerdictScreen";
+import AuntiesScreen from "./screens/AuntiesScreen";
 import ComingSoonScreen from "./screens/ComingSoonScreen";
 import { computeRishtaResult } from "@/lib/roastEngine";
+import { getDeviceId } from "@/lib/deviceId";
+import { saveSubmission } from "@/lib/submissions";
 import { DEFAULT_FORM_DATA, RishtaFormData, RishtaResult } from "@/lib/types";
 
 export type Screen = "welcome" | "inputs" | "processing" | "verdict" | "aunties" | "profile";
@@ -18,6 +21,12 @@ export default function RishtaRateApp() {
   const [screen, setScreen] = useState<Screen>("welcome");
   const [formData, setFormData] = useState<RishtaFormData>(DEFAULT_FORM_DATA);
   const [result, setResult] = useState<RishtaResult | null>(null);
+  const [deviceId, setDeviceId] = useState("");
+  const [refreshSignal, setRefreshSignal] = useState(0);
+
+  useEffect(() => {
+    setDeviceId(getDeviceId());
+  }, []);
 
   const handleNavigate = (target: Screen) => {
     if (target === "verdict" && !result) {
@@ -28,8 +37,16 @@ export default function RishtaRateApp() {
   };
 
   const handleProcessingComplete = () => {
-    setResult(computeRishtaResult(formData));
+    const computed = computeRishtaResult(formData);
+    setResult(computed);
     setScreen("verdict");
+
+    // Auto-post to the public leaderboard + this device's history.
+    // Fire-and-forget: never block the verdict on network.
+    const id = deviceId || getDeviceId();
+    saveSubmission(id, formData.nickname, computed).then(() =>
+      setRefreshSignal((s) => s + 1)
+    );
   };
 
   if (screen === "processing") {
@@ -68,11 +85,7 @@ export default function RishtaRateApp() {
           <VerdictScreen result={result} onTryAgain={() => setScreen("inputs")} />
         )}
         {screen === "aunties" && (
-          <ComingSoonScreen
-            icon="group"
-            title="The Aunties Are Busy"
-            body="Every aunty in the network is currently discussing someone else's biodata. Check back soon."
-          />
+          <AuntiesScreen deviceId={deviceId} refreshSignal={refreshSignal} />
         )}
         {screen === "profile" && (
           <ComingSoonScreen

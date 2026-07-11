@@ -3,6 +3,7 @@ export type VibeCheck = "SIMPLE" | "NRI VIBES";
 export type MoustacheGame = "NONE" | "TRIMMED" | "SARDAR";
 
 export interface RishtaFormData {
+  nickname: string; // what shows up on the public leaderboard
   job: string; // free text, e.g. "SDE-1 at FAANG"
   ctcLakhs: number;
   degree: string;
@@ -30,7 +31,18 @@ export interface RishtaResult {
   redFlagDetail: string;
 }
 
+export interface Submission {
+  id: string;
+  device_id: string;
+  nickname: string;
+  total_amount: number;
+  headline: string;
+  red_flag_label: string;
+  created_at: string;
+}
+
 export const DEFAULT_FORM_DATA: RishtaFormData = {
+  nickname: "",
   job: "SDE-1 at FAANG (The Gold Standard)",
   ctcLakhs: 25,
   degree: "",
