@@ -260,6 +260,27 @@ export default function InputsScreen({ data, onChange, onSubmit }: InputsScreenP
           </div>
 
           <div className="space-y-2">
+            <div className="flex justify-between items-end">
+              <label className="font-label-bold text-on-surface-variant px-1">
+                WEDDING BUDGET (IN LAKHS)
+              </label>
+              <span className="font-headline-md text-primary">₹{data.weddingBudgetLakhs}L</span>
+            </div>
+            <input
+              type="range"
+              min={5}
+              max={200}
+              step={5}
+              value={data.weddingBudgetLakhs}
+              onChange={(e) => set("weddingBudgetLakhs", Number(e.target.value))}
+              className="mt-2"
+            />
+            <p className="text-center font-body-sm italic text-on-surface-variant opacity-70">
+              Auntie Tip: Whatever you say, double it. That&apos;s the real number.
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <label className="font-label-bold text-on-surface-variant px-1 block">MOUSTACHE GAME</label>
             <div className="grid grid-cols-3 gap-2">
               {(

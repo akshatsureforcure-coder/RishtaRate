@@ -37,18 +37,31 @@ export default function RishtaRateApp() {
   };
 
   const handleProcessingComplete = async () => {
-    let computed = computeRishtaResult(formData);
+    let computed: RishtaResult;
 
-    // Nudge the final number by today's live gold rate, if we can get it
-    // quickly. Never let this block or break the verdict.
-    try {
-      const res = await fetch("/api/gold-rate", { signal: AbortSignal.timeout(6000) });
-      if (res.ok) {
-        const { rate, source } = await res.json();
-        computed = applyGoldRateAdjustment(computed, rate, source);
-      }
-    } catch {
-      // No live rate this time — show the roast-only result, no big deal.
+    const [rateRes, goldRes] = await Promise.allSettled([
+      fetch("/api/generate-rate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+        signal: AbortSignal.timeout(10000),
+      }),
+      fetch("/api/gold-rate", { signal: AbortSignal.timeout(6000) }),
+    ]);
+
+    if (rateRes.status === "fulfilled" && rateRes.value.ok) {
+      const { result } = await rateRes.value.json();
+      computed = result;
+    } else {
+      // Belt-and-suspenders fallback if even the request itself failed
+      // (network down, etc.) — the API route already has its own
+      // internal fallback for when Gemini specifically fails.
+      computed = { ...computeRishtaResult(formData), source: "rules" };
+    }
+
+    if (goldRes.status === "fulfilled" && goldRes.value.ok) {
+      const { rate, source } = await goldRes.value.json();
+      computed = applyGoldRateAdjustment(computed, rate, source);
     }
 
     setResult(computed);

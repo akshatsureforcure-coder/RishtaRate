@@ -15,6 +15,7 @@ export interface RishtaFormData {
   mummyApproval: number; // 0-100
   moustache: MoustacheGame;
   singsBollywood: boolean;
+  weddingBudgetLakhs: number; // how much they want to spend on the wedding, in lakhs
 }
 
 export interface BreakdownChip {
@@ -29,6 +30,7 @@ export interface RishtaResult {
   compatibility: number; // 0-100
   redFlagLabel: string;
   redFlagDetail: string;
+  source?: "ai" | "rules";
   goldRateAdjustment?: {
     ratePerTenGrams: number;
     source: "live" | "fallback";
@@ -60,4 +62,5 @@ export const DEFAULT_FORM_DATA: RishtaFormData = {
   mummyApproval: 90,
   moustache: "TRIMMED",
   singsBollywood: true,
+  weddingBudgetLakhs: 30,
 };
